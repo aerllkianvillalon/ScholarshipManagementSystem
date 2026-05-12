@@ -76,11 +76,17 @@ $bodyClass  = 'app-body';
                                     </td>
                                     <td>
                                         <div class="applicant-cell">
-                                            <div class="mini-avatar">
-                                                <?= strtoupper(
-                                                    substr($row['applicant_name'], 0, 2)
-                                                ) ?>
-                                            </div>
+                                            <?php $avatar = $row['avatar'] ?? null; ?>
+                                            <?php if (!empty($avatar)): ?>
+                                                <img class="mini-avatar-img"
+                                                     src="<?= APP_URL . '/uploads/' . htmlspecialchars($avatar) ?>"
+                                                     alt="<?= htmlspecialchars($row['applicant_name'] ?? 'Applicant') ?>">
+                                            <?php else: ?>
+                                                <div class="mini-avatar">
+                                                    <?= strtoupper(substr($row['applicant_name'] ?? 'U', 0, 2)) ?>
+                                                </div>
+                                            <?php endif; ?>
+
                                             <div>
                                                 <strong>
                                                     <?= htmlspecialchars($row['applicant_name']) ?>
@@ -100,11 +106,19 @@ $bodyClass  = 'app-body';
                                         </span>
                                     </td>
                                     <td>
-                                        <a href="<?= APP_URL ?>/reviewer/applications/<?= $row['id'] ?>"
-                                           class="btn-table-action">
-                                            <?= $row['status'] === 'pending' ? 'Review' : 'View' ?>
-                                            <i class="bi bi-arrow-right"></i>
-                                        </a>
+                                        <?php if ($row['status'] === 'pending'): ?>
+                                            <a href="<?= APP_URL ?>/reviewer/applications/<?= $row['id'] ?>"
+                                            class="btn-table-action">
+                                                Review
+                                                <i class="bi bi-arrow-right"></i>
+                                            </a>
+                                        <?php else: ?>
+                                            <a href="<?= APP_URL ?>/reviewer/applications/<?= $row['id'] ?>/view"
+                                            class="btn-table-action">
+                                                View
+                                                <i class="bi bi-arrow-right"></i>
+                                            </a>
+                                        <?php endif; ?>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>

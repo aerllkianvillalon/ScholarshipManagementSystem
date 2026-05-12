@@ -58,9 +58,16 @@
                         <?php foreach ($pending as $app): ?>
                             <div class="review-queue-item">
                                 <div class="rq-applicant">
-                                    <div class="rq-avatar">
-                                        <?= strtoupper(substr($app['applicant_name'], 0, 2)) ?>
-                                    </div>
+                                    <?php $avatar = $app['avatar'] ?? null; ?>
+                                    <?php if (!empty($avatar)): ?>
+                                        <img class="mini-avatar-img"
+                                            src="<?= APP_URL . '/uploads/' . htmlspecialchars($avatar) ?>"
+                                            alt="<?= htmlspecialchars($app['applicant_name'] ?? 'Applicant') ?>">
+                                    <?php else: ?>
+                                        <div class="rq-avatar">
+                                            <?= strtoupper(substr($app['applicant_name'] ?? 'U', 0, 2)) ?>
+                                        </div>
+                                    <?php endif; ?>
                                     <div class="rq-info">
                                         <strong><?= htmlspecialchars($app['applicant_name']) ?></strong>
                                         <small><?= htmlspecialchars($app['applicant_email']) ?></small>

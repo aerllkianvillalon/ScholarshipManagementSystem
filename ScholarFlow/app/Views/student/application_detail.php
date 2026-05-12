@@ -1,4 +1,15 @@
-<?php $pageTitle = 'Application #' . $app['id']; $bodyClass = 'app-body'; ?>
+<?php
+// Prevent undefined-variable warnings in IDEs; $app/$auth are expected from controllers.
+$app = $app ?? [];
+$documents = $documents ?? [];
+$auth = $auth ?? [];
+$csrf = $csrf ?? null;
+
+$pageTitle = 'Application #' . (($app['id'] ?? '') ?: '');
+$bodyClass = 'app-body';
+$isAdmin = (($auth['role'] ?? '') === 'admin');
+$isEditing = isset($csrf);
+?>
 <?php require ROOT . '/app/Views/layouts/header.php'; ?>
 
 <div class="app-layout">
@@ -11,7 +22,21 @@
                 <h2>Application Detail</h2>
                 <span>Reference #<?= str_pad($app['id'], 6, '0', STR_PAD_LEFT) ?></span>
             </div>
+            <?php if (in_array($auth['role'] ?? '', ['admin', 'reviewer'])): ?>
+                <div class="topbar-actions">
+                    <?php if (($auth['role'] ?? '') === 'reviewer'): ?>
+                        <a href="<?= APP_URL ?>/reviewer/applications/<?= (int)$app['id'] ?>/edit" class="btn-add-sm">
+                            <i class="bi bi-pencil-fill"></i> Edit Application
+                        </a>
+                    <?php else: ?>
+                        <a href="<?= APP_URL ?>/admin/applications/<?= (int)$app['id'] ?>/edit" class="btn-add-sm">
+                            <i class="bi bi-pencil-fill"></i> Edit Application
+                        </a>
+                    <?php endif; ?>
+                </div>
+            <?php endif; ?>
         </header>
+
 
         <main class="app-content">
             <?php require ROOT . '/app/Views/layouts/flash.php'; ?>
@@ -21,7 +46,7 @@
                 <i class="bi bi-arrow-left"></i> Back
             </a>
 
-            <div class="detail-layout">
+<div class="detail-layout" id="top">
                 <!-- Main Info -->
                 <div class="detail-main">
                     <!-- Status Banner -->
@@ -100,15 +125,55 @@
                         </div>
                     <?php endif; ?>
 
-                    <!-- Review Notes -->
-                    <?php if (!empty($app['review_notes'])): ?>
-                        <div class="detail-card">
-                            <h5 class="detail-section-title"><i class="bi bi-chat-left-text"></i> Reviewer Notes</h5>
-                            <div class="review-notes-box">
-                                <?= nl2br(htmlspecialchars($app['review_notes'])) ?>
-                            </div>
+                    <!-- Review / Admin Edit -->
+                    <?php if (isset($isEditing) && $isEditing && in_array($auth['role'] ?? '', ['admin', 'reviewer'])): ?>
+                        <div class="detail-card decision-card">
+                            <h5 class="detail-section-title"><i class="bi bi-pencil-square"></i> Edit Decision</h5>
+                                <?php $editAction = ($auth['role'] === 'reviewer')
+                                    ? APP_URL . '/reviewer/applications/' . (int)$app['id'] . '/edit'
+                                    : APP_URL . '/admin/applications/' . (int)$app['id'] . '/edit'; ?>
+                                <form id="decisionForm" method="POST" action="<?= $editAction ?>" onsubmit="return ensureDecisionSelected();">
+                                <input type="hidden" name="status" id="decisionStatus" value="">
+                                <input type="hidden" name="_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? $csrf) ?>">
+
+                                <div class="form-group">
+                                    <label class="form-label">Status</label>
+                                    <div class="decision-buttons">
+                                        <?php
+                                        $curStatus = $app['status'] ?? 'pending';
+                                        ?>
+                                        <button type="button" name="status" value="approved" class="btn-approve" <?= $curStatus === 'approved' ? 'disabled="disabled" aria-disabled="true" tabindex="-1" style="pointer-events:none; opacity:0.65;"' : '' ?> onclick="setDecision('approved'); return false;">
+                                            <i class="bi bi-check-circle"></i> Approve
+                                        </button>
+                                        <button type="button" name="status" value="rejected" class="btn-reject" <?= $curStatus === 'rejected' ? 'disabled="disabled" aria-disabled="true" tabindex="-1" style="pointer-events:none; opacity:0.65;"' : '' ?> onclick="setDecision('rejected'); return false;">
+                                            <i class="bi bi-x-circle"></i> Reject
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="form-group mt-3">
+                                    <label class="form-label">Review Notes</label>
+                                    <textarea name="review_notes" class="form-control" rows="4" placeholder="Add notes about your decision..."><?= htmlspecialchars($app['review_notes'] ?? '') ?></textarea>
+                                </div>
+                                </form>
+                        <div class="form-actions" style="margin-top:1.25rem;">
+                            <button type="submit" form="decisionForm" class="btn-save" onclick="return confirm('Do you want to save changes to this decision?');">
+                                <i class="bi bi-check-lg"></i> Save Changes
+                            </button>
                         </div>
+
+                        </div>
+                    <?php else: ?>
+                        <?php if (!empty($app['review_notes'])): ?>
+                            <div class="detail-card">
+                                <h5 class="detail-section-title"><i class="bi bi-chat-left-text"></i> Reviewer Notes</h5>
+                                <div class="review-notes-box">
+                                    <?= nl2br(htmlspecialchars($app['review_notes'])) ?>
+                                </div>
+                            </div>
+                        <?php endif; ?>
                     <?php endif; ?>
+
                 </div>
 
                 <!-- Sidebar Meta -->
@@ -163,3 +228,84 @@
 </div>
 
 <?php require ROOT . '/app/Views/layouts/footer.php'; ?>
+
+<script>
+  function setDecision(decision) {
+    const el = document.getElementById('decisionStatus');
+    if (!el) return;
+
+    el.value = decision;
+
+    const btnReject = document.querySelector('.btn-reject');
+    const btnApprove = document.querySelector('.btn-approve');
+
+    // Always re-enable both first (interchangeable behavior)
+    if (btnReject) {
+      btnReject.disabled = false;
+      btnReject.style.pointerEvents = '';
+      btnReject.style.opacity = '';
+      btnReject.setAttribute('aria-disabled', 'false');
+      btnReject.style.filter = '';
+    }
+    if (btnApprove) {
+      btnApprove.disabled = false;
+      btnApprove.style.pointerEvents = '';
+      btnApprove.style.opacity = '';
+      btnApprove.setAttribute('aria-disabled', 'false');
+      btnApprove.style.filter = '';
+    }
+
+    // Lock only the selected decision button
+    if (decision === 'rejected') {
+      if (btnReject) {
+        btnReject.disabled = true;
+        btnReject.setAttribute('aria-disabled', 'true');
+        btnReject.style.pointerEvents = 'none';
+        btnReject.style.opacity = '0.65';
+      }
+    }
+
+    if (decision === 'approved') {
+      if (btnApprove) {
+        btnApprove.disabled = true;
+        btnApprove.setAttribute('aria-disabled', 'true');
+        btnApprove.style.pointerEvents = 'none';
+        btnApprove.style.opacity = '0.65';
+      }
+    }
+  }
+
+  function ensureDecisionSelected() {
+    const el = document.getElementById('decisionStatus');
+    if (!el) return true;
+    if (!el.value || el.value.length === 0) {
+      alert('Please select Approve or Reject before saving.');
+      return false;
+    }
+    return true;
+  }
+
+  // If editing an already decided application, set UI lock consistently.
+  window.addEventListener('load', () => {
+    const statusEl = document.getElementById('decisionStatus');
+    const formCard = document.querySelector('.decision-card');
+    if (!statusEl || !formCard) return;
+
+    // The server disables the selected button already; we still set hidden field so submission validation passes.
+    const approvedDisabled = document.querySelector('.btn-approve')?.disabled;
+    const rejectedDisabled = document.querySelector('.btn-reject')?.disabled;
+
+    // Only set if server indicates one is disabled due to current status.
+    if (!statusEl.value && approvedDisabled) setDecision('approved');
+    if (!statusEl.value && rejectedDisabled) setDecision('rejected');
+  });
+</script>
+
+<?php if ($isEditing): ?>
+<script>
+  window.addEventListener('load', function () {
+    const el = document.querySelector('.decision-card');
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+</script>
+<?php endif; ?>

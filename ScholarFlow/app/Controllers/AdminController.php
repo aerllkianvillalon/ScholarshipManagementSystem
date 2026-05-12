@@ -5,6 +5,7 @@ require_once ROOT . '/core/Controller.php';
 require_once ROOT . '/app/Models/User.php';
 require_once ROOT . '/app/Models/Scholarship.php';
 require_once ROOT . '/app/Models/Application.php';
+require_once ROOT . '/app/Models/Document.php';
 
 class AdminController extends Controller
 {
@@ -21,8 +22,10 @@ class AdminController extends Controller
 
     public function dashboard(): void
     {
-        $this->requireRole('admin');
         $auth = $this->auth();
+        if (!in_array($auth['role'] ?? '', ['admin', 'reviewer'], true)) {
+            $this->redirect('/');
+        }
 
         // Stats
         $userCounts = [];
@@ -244,6 +247,93 @@ class AdminController extends Controller
         $apps  = $this->application->allWithDetails();
         $flash = $this->getFlash();
         $this->view('admin.applications', compact('auth', 'apps', 'flash'));
+    }
+
+
+    // ── Admin - Applications (Read/Edit/Delete) ─────────────────────────────
+    public function applicationShow(string $id): void
+    {
+        $this->requireRole('admin');
+        $auth = $this->auth();
+
+        $app = $this->application->findWithDetails((int)$id);
+        if (!$app) {
+            $this->setFlash('error', 'Application not found.');
+            $this->redirect('/admin/applications');
+        }
+
+        $documents = (new Document())->forApplication((int)$id);
+        $this->view('student.application_detail', compact('auth', 'app', 'documents'));
+    }
+
+    public function applicationEditForm(string $id): void
+    {
+        if (!in_array(($this->auth()['role'] ?? ''), ['admin', 'reviewer'])) {
+            $this->redirect('/');
+        }
+        $auth = $this->auth();
+
+        $app = $this->application->findWithDetails((int)$id);
+        if (!$app) {
+            $this->setFlash('error', 'Application not found.');
+            $this->redirect('/admin/applications');
+        }
+
+        $documents = (new Document())->forApplication((int)$id);
+        $csrf = $this->generateCsrfToken();
+        $flash = $this->getFlash();
+
+        // Reuse the same view file, but with edit mode
+        $isEdit = true;
+        $this->view('student.application_detail', compact('auth', 'app', 'documents', 'csrf', 'flash', 'isEdit'));
+    }
+
+    public function applicationUpdateEdit(string $id): void
+    {
+        $this->requireRole('admin');
+        $this->verifyCsrfToken();
+
+        $auth = $this->auth();
+
+        $appId = (int)$id;
+        $app = $this->application->findWithDetails($appId);
+        if (!$app) {
+            $this->setFlash('error', 'Application not found.');
+            $this->redirect('/admin/applications');
+        }
+
+        $status = $this->input('status');
+        $notes  = trim((string)$this->input('review_notes'));
+
+        if (!in_array($status, ['approved', 'rejected'], true)) {
+            $this->setFlash('error', 'Invalid status.');
+            $this->redirect('/admin/applications/' . $id . '/edit');
+        }
+
+        // Store admin decision + notes (Reviewed By / Reviewed On)
+        $this->application->decide($appId, (int)$auth['id'], $status, $notes);
+
+        $this->setFlash('success', 'Application updated successfully.');
+        $this->redirect('/admin/applications/' . $id);
+    }
+
+    public function deleteApplication(string $id): void
+
+    {
+        $this->requireRole('admin');
+        $this->verifyCsrfToken();
+
+        $appId = (int)$id;
+        $app   = $this->application->find($appId);
+
+        if (!$app) {
+            $this->setFlash('error', 'Application not found.');
+            $this->redirect('/admin/applications');
+        }
+
+        $this->application->delete($appId);
+        $this->setFlash('success', 'Application deleted successfully.');
+        $this->redirect('/admin/applications');
     }
 
     private function validateScholarshipInput(): array

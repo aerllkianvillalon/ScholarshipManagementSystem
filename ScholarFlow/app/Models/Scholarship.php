@@ -32,14 +32,29 @@ class Scholarship extends Model
      */
     public function availableForStudent(int $userId): array
     {
-        // Check if student has an approved application for a non-multiple scholarship
-        $exclusiveApproved = $this->queryOne(
-            "SELECT a.scholarship_id FROM applications a
+        // If student currently has any exclusive scholarship application
+        // in pending/approved state, block applying to any exclusive scholarship
+        // (but still allow applications to multiple-allowed scholarships).
+        $hasExclusiveBlocking = $this->queryOne(
+            "SELECT 1 FROM applications a
              JOIN scholarships s ON s.id = a.scholarship_id
-             WHERE a.user_id = ? AND s.allows_multiple = 0 AND a.status = 'approved'
+             WHERE a.user_id = ? AND s.allows_multiple = 0 AND a.status IN ('pending','approved')
              LIMIT 1",
             [$userId]
         );
+
+        // If student currently has any multiple-allowed scholarship application
+        // in pending/approved state, block applying to any exclusive scholarship.
+        // (They may still apply to other multiple-allowed scholarships.)
+        $hasMultipleBlocking = $this->queryOne(
+            "SELECT 1 FROM applications a
+             JOIN scholarships s ON s.id = a.scholarship_id
+             WHERE a.user_id = ? AND s.allows_multiple = 1 AND a.status IN ('pending','approved')
+             LIMIT 1",
+            [$userId]
+        );
+
+
 
         // IDs already applied to
         $appliedIds = $this->query(
@@ -52,8 +67,15 @@ class Scholarship extends Model
 
         foreach ($scholarships as &$s) {
             $s['already_applied'] = in_array($s['id'], $appliedIdList);
-            // Locked if: student approved for exclusive AND this one doesn't allow multiple
-            $s['locked'] = $exclusiveApproved && !$s['allows_multiple'];
+        // Locked behavior:
+        // - If student has an EXCLUSIVE pending/approved => lock ALL scholarships.
+        // - Else if student has a MULTIPLE pending/approved => lock ONLY EXCLUSIVE scholarships.
+        $s['locked'] = ($hasExclusiveBlocking) || ($hasMultipleBlocking && !$s['allows_multiple']);
+
+
+
+
+
         }
 
         return $scholarships;
@@ -72,23 +94,45 @@ class Scholarship extends Model
         );
         if ($existing) return ['available' => false, 'reason' => 'You have already applied to this scholarship.'];
 
-        // If this scholarship does NOT allow multiple:
-        // check if student already has approved app in any non-multiple scholarship
-        if (!$scholarship['allows_multiple']) {
-            $conflict = $this->queryOne(
-                "SELECT a.id FROM applications a
-                 JOIN scholarships s ON s.id = a.scholarship_id
-                 WHERE a.user_id = ? AND s.allows_multiple = 0 AND a.status = 'approved'",
-                [$userId]
-            );
-            if ($conflict) {
-                return [
-                    'available' => false,
-                    'reason'    => 'You already have an approved exclusive scholarship. You cannot apply to another exclusive scholarship.'
-                ];
-            }
+        // 1) If the student has an EXCLUSIVE (allows_multiple=0) application
+        //    in pending/approved state, lock ALL scholarship applications.
+        $hasExclusivePendingOrApproved = $this->queryOne(
+            "SELECT 1 FROM applications a
+             JOIN scholarships s ON s.id = a.scholarship_id
+             WHERE a.user_id = ? AND s.allows_multiple = 0 AND a.status IN ('pending','approved')
+             LIMIT 1",
+            [$userId]
+        );
+
+        if ($hasExclusivePendingOrApproved) {
+            return [
+                'available' => false,
+                'reason'    => 'You already have an exclusive scholarship application pending/approved. You cannot apply to other scholarships yet.'
+            ];
+        }
+
+        // 2) If the student has one or more MULTIPLE-allowed applications
+        //    in pending/approved state:
+        //    - lock all EXCLUSIVE scholarships
+        //    - keep MULTIPLE-allowed scholarships available
+        $hasMultiplePendingOrApproved = $this->queryOne(
+            "SELECT 1 FROM applications a
+             JOIN scholarships s ON s.id = a.scholarship_id
+             WHERE a.user_id = ? AND s.allows_multiple = 1 AND a.status IN ('pending','approved')
+             LIMIT 1",
+            [$userId]
+        );
+
+        if ($hasMultiplePendingOrApproved && !$scholarship['allows_multiple']) {
+            return [
+                'available' => false,
+                'reason'    => 'You already have an allow-multiple scholarship application pending/approved. You cannot apply to exclusive scholarships yet.'
+            ];
         }
 
         return ['available' => true, 'scholarship' => $scholarship];
+
+
     }
 }
+

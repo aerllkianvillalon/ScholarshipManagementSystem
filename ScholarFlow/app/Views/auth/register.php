@@ -44,22 +44,58 @@
             <div class="form-row-2">
                 <div class="form-group">
                     <label class="form-label">Password</label>
-                    <div class="input-with-icon">
+                    <div class="input-with-icon input-password">
                         <i class="bi bi-lock"></i>
                         <input type="password" name="password" class="form-control"
-                               placeholder="Min. 8 characters" required minlength="8">
+                               placeholder="Min. 8 characters" required minlength="8" id="passwordInputRegister">
+                        <button type="button" class="toggle-password" onclick="toggleRegisterPassword()">
+                            <i class="bi bi-eye" id="eyeIconRegister"></i>
+                        </button>
                     </div>
                 </div>
 
                 <div class="form-group">
                     <label class="form-label">Confirm Password</label>
-                    <div class="input-with-icon">
+                    <div class="input-with-icon input-password">
                         <i class="bi bi-lock-fill"></i>
                         <input type="password" name="password_confirmation" class="form-control"
-                               placeholder="Repeat password" required>
+                               placeholder="Repeat password" required id="confirmPasswordInputRegister">
+                        <button type="button" class="toggle-password" onclick="toggleRegisterConfirmPassword()">
+                            <i class="bi bi-eye" id="confirmEyeIconRegister"></i>
+                        </button>
                     </div>
                 </div>
             </div>
+
+            <script>
+                function toggleRegisterPassword() {
+                    const inp = document.getElementById('passwordInputRegister');
+                    const ico = document.getElementById('eyeIconRegister');
+                    if (!inp || !ico) return;
+
+                    if (inp.type === 'password') {
+                        inp.type = 'text';
+                        ico.className = 'bi bi-eye-slash';
+                    } else {
+                        inp.type = 'password';
+                        ico.className = 'bi bi-eye';
+                    }
+                }
+
+                function toggleRegisterConfirmPassword() {
+                    const inp = document.getElementById('confirmPasswordInputRegister');
+                    const ico = document.getElementById('confirmEyeIconRegister');
+                    if (!inp || !ico) return;
+
+                    if (inp.type === 'password') {
+                        inp.type = 'text';
+                        ico.className = 'bi bi-eye-slash';
+                    } else {
+                        inp.type = 'password';
+                        ico.className = 'bi bi-eye';
+                    }
+                }
+            </script>
 
             <div class="form-check-terms">
                 <input class="form-check-input" type="checkbox" id="termsCheck" required>

@@ -28,7 +28,7 @@ class Application extends Model
                     s.name as scholarship_name, s.description as scholarship_description,
                     s.amount, s.allows_multiple, s.requirements,
                     u.name as applicant_name, u.email as applicant_email,
-                    u.phone, u.address, u.course, u.school, u.gpa, u.year_level,
+                    u.phone, u.address, u.course, u.school, u.gpa, u.year_level, u.avatar,
                     r.name as reviewer_name
              FROM applications a
              JOIN scholarships s ON s.id = a.scholarship_id
@@ -42,12 +42,16 @@ class Application extends Model
     public function allPending(): array
     {
         return $this->query(
-            "SELECT a.*, s.name as scholarship_name, u.name as applicant_name, u.email as applicant_email
-             FROM applications a
-             JOIN scholarships s ON s.id = a.scholarship_id
-             JOIN users u ON u.id = a.user_id
-             WHERE a.status = 'pending'
-             ORDER BY a.created_at ASC"
+            "SELECT a.*, 
+                    s.name as scholarship_name, 
+                    u.name as applicant_name, 
+                    u.email as applicant_email,
+                    u.avatar
+            FROM applications a
+            JOIN scholarships s ON s.id = a.scholarship_id
+            JOIN users u ON u.id = a.user_id
+            WHERE a.status = 'pending'
+            ORDER BY a.created_at ASC"
         );
     }
 
@@ -56,7 +60,10 @@ class Application extends Model
         $where  = $status ? "WHERE a.status = ?" : '';
         $params = $status ? [$status] : [];
         return $this->query(
-            "SELECT a.*, s.name as scholarship_name, u.name as applicant_name, u.email
+            "SELECT a.*, s.name as scholarship_name,
+                     u.name as applicant_name,
+                     u.email,
+                     u.avatar
              FROM applications a
              JOIN scholarships s ON s.id = a.scholarship_id
              JOIN users u ON u.id = a.user_id

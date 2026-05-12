@@ -187,14 +187,22 @@ document.querySelectorAll('.file-drop-zone').forEach(zone => {
     const input = zone.querySelector('.file-input');
     const preview = zone.querySelector('.file-preview');
     const content = zone.querySelector('.drop-content');
-
-    zone.addEventListener('click', () => input.click());
+    
+    zone.addEventListener('click', (e) => {
+        if (e.target !== input) {
+            input.click();
+        }
+    });
     zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
     zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
     zone.addEventListener('drop', e => {
         e.preventDefault();
         zone.classList.remove('drag-over');
-        if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+
+        if (e.dataTransfer.files.length > 0) {
+            input.files = e.dataTransfer.files;
+            handleFile(input.files[0]);
+        }
     });
     input.addEventListener('change', () => { if (input.files[0]) handleFile(input.files[0]); });
 

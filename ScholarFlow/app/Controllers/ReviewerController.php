@@ -55,6 +55,61 @@ class ReviewerController extends Controller
         $this->view('reviewer.review', compact('auth', 'app', 'documents', 'csrf', 'flash'));
     }
 
+    public function viewApplication(string $id): void    
+    {
+        $this->requireRole('reviewer');
+        $auth = $this->auth();
+        $app  = $this->application->findWithDetails((int)$id);
+        if (!$app) {
+            $this->redirect('/reviewer/applications');
+        }
+        $documents = $this->document->forApplication((int)$id);
+        $flash = $this->getFlash();
+        $this->view(
+            'student.application_detail',
+            compact('auth', 'app', 'documents', 'flash')
+        );
+    }
+
+    public function editApplication(string $id): void
+    {
+        $this->requireRole('reviewer');
+        $auth = $this->auth();
+        $app  = $this->application->findWithDetails((int)$id);
+        if (!$app) {
+            $this->redirect('/reviewer/applications');
+        }
+        $documents = $this->document->forApplication((int)$id);
+        $csrf  = $this->generateCsrfToken();
+        $flash = $this->getFlash();
+        $isEdit = true;
+        $this->view('student.application_detail', compact('auth', 'app', 'documents', 'csrf', 'flash', 'isEdit'));
+    }
+
+    public function updateApplicationEdit(string $id): void
+    {
+        $this->requireRole('reviewer');
+        $this->verifyCsrfToken();
+        $auth = $this->auth();
+
+        $status = $this->input('status');
+        $notes  = trim((string)$this->input('review_notes'));
+
+        if (!in_array($status, ['approved', 'rejected'], true)) {
+            $this->setFlash('error', 'Invalid status.');
+            $this->redirect('/reviewer/applications/' . $id . '/edit');
+        }
+
+        $this->application->decide((int)$id, (int)$auth['id'], $status, $notes);
+
+        $msg = $status === 'approved'
+            ? 'Application updated successfully.'
+            : 'Application has been rejected.';
+
+        $this->setFlash('success', $msg);
+        $this->redirect('/reviewer/applications');
+    }
+
     public function decide(string $id): void
     {
         $this->requireRole('reviewer');

@@ -94,8 +94,11 @@ class StudentController extends Controller
 
         $this->user->updateProfile($auth['id'], $data);
 
-        // Update session name
+        // Update session name + avatar so sidebar refreshes instantly
         $_SESSION['user']['name'] = $data['name'];
+        if (isset($data['avatar'])) {
+            $_SESSION['user']['avatar'] = $data['avatar'];
+        }
 
         $this->setFlash('success', 'Profile updated successfully!');
         $this->redirect('/profile');

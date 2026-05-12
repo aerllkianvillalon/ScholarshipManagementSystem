@@ -60,10 +60,11 @@ class AuthController extends Controller
 
         // Set session
         $_SESSION['user'] = [
-            'id'    => $user['id'],
-            'name'  => $user['name'],
-            'email' => $user['email'],
-            'role'  => $user['role'],
+            'id'     => $user['id'],
+            'name'   => $user['name'],
+            'email'  => $user['email'],
+            'role'   => $user['role'],
+            'avatar' => $user['avatar'] ?? null,
         ];
         session_regenerate_id(true);
 

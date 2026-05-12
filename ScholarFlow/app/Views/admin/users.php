@@ -23,44 +23,52 @@ $bodyClass = 'app-body';
                 <h2>Users</h2>
                 <span>Manage accounts</span>
             </div>
+            <div class="topbar-actions">
+                <a href="<?= APP_URL ?>/admin/users/create" class="btn-topbar">
+                    <i class="bi bi-plus-lg"></i> Add User
+                </a>
+            </div>
         </header>
 
         <main class="app-content">
             <?php require ROOT . '/app/Views/layouts/flash.php'; ?>
 
             <div class="content-card">
-                <div class="card-header-row">
-                    <h4>All Users</h4>
-                    <a href="<?= APP_URL ?>/admin/users/create" class="btn-add-sm">
-                        <i class="bi bi-plus-lg"></i> Add User
-                    </a>
-                </div>
-
                 <div class="filter-bar">
                     <div class="filter-search">
                         <i class="bi bi-search"></i>
-                        <form method="GET" action="<?= APP_URL ?>/admin/users" style="display:flex; align-items:center; gap:0.75rem; width:100%;">
+                        <div class="users-search-wrap">
+                            <i class="bi bi-search users-search-icon-left" aria-hidden="true"></i>
                             <input
                                 type="text"
-                                name="q"
+                                id="usersSearch"
                                 value="<?= htmlspecialchars($q ?? '') ?>"
                                 placeholder="Search by name or email..."
-                                class="search-input"
+                                class="search-input users-search-input"
+                                aria-label="Search users"
                             >
+                            <a
+                                href="<?= APP_URL ?>/admin/users"
+                                class="users-clear-x"
+                                aria-label="Clear search"
+                                title="Clear"
+                                <?= empty($q) ? 'style="display:none"' : '' ?>
+                                id="usersClearX"
+                            >
+                                <i class="bi bi-x-lg" aria-hidden="true"></i>
+                            </a>
+                        </div>
+                    </div>
 
-                            <select name="role" class="form-select form-select-sm" style="max-width:160px;">
-                                <option value="" <?= empty($role) ? 'selected' : '' ?>>All</option>
-                                <option value="student" <?= ($role ?? '') === 'student' ? 'selected' : '' ?>>Students</option>
-                                <option value="reviewer" <?= ($role ?? '') === 'reviewer' ? 'selected' : '' ?>>Reviewers</option>
-                                <option value="admin" <?= ($role ?? '') === 'admin' ? 'selected' : '' ?>>Admins</option>
-                            </select>
-
-                            <button type="submit" class="btn btn-sm" style="white-space:nowrap;">
-                                <i class="bi bi-search"></i>
-                            </button>
-                        </form>
+                    <div class="filter-badges">
+                        <button class="filter-btn active" data-role-filter="">All</button>
+                        <button class="filter-btn" data-role-filter="student">Students</button>
+                        <button class="filter-btn" data-role-filter="reviewer">Reviewers</button>
+                        <button class="filter-btn" data-role-filter="admin">Admins</button>
                     </div>
                 </div>
+
+
 
                 <?php if (empty($users)): ?>
                     <div class="empty-state">
@@ -81,13 +89,21 @@ $bodyClass = 'app-body';
                             </thead>
                             <tbody>
                                 <?php foreach ($users as $u): ?>
-                                    <tr>
+                                    <?php $roleVal = strtolower((string)($u['role'] ?? '')); ?>
+                                    <tr data-role="<?= htmlspecialchars($roleVal) ?>"
+                                        data-search="<?= htmlspecialchars(strtolower(($u['name'] ?? '') . ' ' . ($u['email'] ?? ''))) ?>">
                                         <td><?= htmlspecialchars($u['name'] ?? '') ?></td>
                                         <td><?= htmlspecialchars($u['email'] ?? '') ?></td>
                                         <td>
-                                            <span class="badge-status-sm badge-status-<?= htmlspecialchars($u['role'] ?? '') ?>">
-                                                <?= htmlspecialchars(ucfirst($u['role'] ?? '')) ?>
-                                            </span>
+                                            <?php if ($roleVal === 'student'): ?>
+                                                <span class="badge-role badge-student">Student</span>
+                                            <?php elseif ($roleVal === 'reviewer'): ?>
+                                                <span class="badge-role badge-reviewer">Reviewer</span>
+                                            <?php elseif ($roleVal === 'admin'): ?>
+                                                <span class="badge-role badge-admin">Admin</span>
+                                            <?php else: ?>
+                                                <span class="badge-role"><?= htmlspecialchars(ucfirst($roleVal ?: 'unknown')) ?></span>
+                                            <?php endif; ?>
                                         </td>
                                         <td>
                                             <?= !empty($u['created_at'])
@@ -113,6 +129,7 @@ $bodyClass = 'app-body';
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
+
                             </tbody>
                         </table>
                     </div>
@@ -122,5 +139,44 @@ $bodyClass = 'app-body';
     </div>
 </div>
 
+<script>
+(function () {
+    const search = document.getElementById('usersSearch');
+    const filterBtns = document.querySelectorAll('.filter-btn[data-role-filter]');
+    const rows = Array.from(document.querySelectorAll('table.sf-table tbody tr[data-role]'));
+
+    let activeRole = '';
+
+    function filterRows() {
+        const q = (search?.value || '').trim().toLowerCase();
+
+        rows.forEach(row => {
+            const rowRole = row.dataset.role || '';
+            const rowSearch = (row.dataset.search || '').toLowerCase();
+
+            const matchRole = !activeRole || rowRole === activeRole;
+            const matchQ = !q || rowSearch.includes(q);
+
+            row.style.display = (matchRole && matchQ) ? '' : 'none';
+        });
+    }
+
+    search?.addEventListener('input', filterRows);
+
+    filterBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            filterBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            activeRole = btn.dataset.roleFilter || '';
+            filterRows();
+        });
+    });
+
+    // initial paint (in case server filled q)
+    filterRows();
+})();
+</script>
+
 <?php require ROOT . '/app/Views/layouts/footer.php'; ?>
+
 

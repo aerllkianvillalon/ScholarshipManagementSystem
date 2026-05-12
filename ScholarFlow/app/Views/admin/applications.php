@@ -1,6 +1,8 @@
 <?php $pageTitle = 'All Applications'; $bodyClass = 'app-body'; ?>
 <?php require ROOT . '/app/Views/layouts/header.php'; ?>
 
+<?php $apps = $apps ?? []; ?>
+
 <div class="app-layout">
     <?php require ROOT . '/app/Views/layouts/sidebar.php'; ?>
 
@@ -44,21 +46,32 @@
                                 <th>Scholarship</th>
                                 <th>Applied</th>
                                 <th>Status</th>
+                                <th>ACTIONS</th>
                             </tr>
+
                         </thead>
                         <tbody>
                             <?php foreach ($apps as $app): ?>
                                 <tr data-status="<?= $app['status'] ?>"
-                                    data-search="<?= strtolower($app['applicant_name'] . ' ' . $app['scholarship_name']) ?>">
+                                    data-search="<?= strtolower(($app['applicant_name'] ?? '') . ' ' . ($app['scholarship_name'] ?? '')) ?>">
+
                                     <td class="mono"><?= str_pad($app['id'], 5, '0', STR_PAD_LEFT) ?></td>
                                     <td>
+
                                         <div class="applicant-cell">
-                                            <div class="mini-avatar"><?= strtoupper(substr($app['applicant_name'], 0, 2)) ?></div>
+                                            <?php $avatar = $app['avatar'] ?? null; ?>
+                                            <?php if (!empty($avatar)): ?>
+                                                <img class="mini-avatar-img" src="<?= APP_URL . '/uploads/' . htmlspecialchars($avatar) ?>" alt="<?= htmlspecialchars($app['applicant_name'] ?? 'Applicant') ?>">
+                                            <?php else: ?>
+                                                <div class="mini-avatar"><?= strtoupper(substr($app['applicant_name'] ?? 'U', 0, 2)) ?></div>
+                                            <?php endif; ?>
+
                                             <div>
                                                 <strong><?= htmlspecialchars($app['applicant_name']) ?></strong>
                                                 <small><?= htmlspecialchars($app['email']) ?></small>
                                             </div>
                                         </div>
+
                                     </td>
                                     <td><?= htmlspecialchars($app['scholarship_name']) ?></td>
                                     <td><?= date('M j, Y', strtotime($app['created_at'])) ?></td>
@@ -68,7 +81,33 @@
                                             <?= ucfirst($app['status']) ?>
                                         </span>
                                     </td>
+                                    <td class="actions-col">
+                                        <div class="row-actions">
+                                            <div class="action-btns">
+                                                <a class="btn-icon-action" href="<?= APP_URL ?>/admin/applications/<?= (int)$app['id'] ?>" title="View">
+                                                    <i class="bi bi-eye-fill"></i>
+                                                </a>
+
+                                                <form method="POST"
+                                                      action="<?= APP_URL ?>/admin/applications/<?= (int)$app['id'] ?>/delete"
+                                                      onsubmit="return confirm('Delete this application? This cannot be undone.');">
+                                                    <input type="hidden" name="_token"
+                                                           value="<?php
+                                                               if (empty($_SESSION['csrf_token'])) {
+                                                                   $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+                                                               }
+                                                               echo $_SESSION['csrf_token'];
+                                                           ?>">
+                                                    <button type="submit" class="btn-icon-action btn-danger-icon" title="Delete">
+                                                        <i class="bi bi-trash3-fill"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </td>
+
                                 </tr>
+
                             <?php endforeach; ?>
                         </tbody>
                     </table>

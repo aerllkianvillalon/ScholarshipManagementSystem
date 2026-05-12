@@ -23,6 +23,15 @@ $bodyClass  = 'app-body';
                 <h2>Review Application</h2>
                 <span>Application #<?= str_pad($app['id'], 6, '0', STR_PAD_LEFT) ?></span>
             </div>
+            <!-- Edit button only appears on view page, not review page -->
+             <?php if (!empty($isViewMode)): ?>
+                <div class="topbar-actions">
+                    <a href="<?= APP_URL ?>/reviewer/applications/<?= (int)$app['id'] ?>/edit"
+                    class="btn-add-sm">
+                        <i class="bi bi-pencil-fill"></i> Edit Application
+                    </a>
+                </div>
+            <?php endif; ?>
         </header>
 
         <main class="app-content">
@@ -39,9 +48,16 @@ $bodyClass  = 'app-body';
                     <!-- Applicant Profile Card -->
                     <div class="detail-card reviewer-applicant-card">
                         <div class="applicant-profile">
-                            <div class="applicant-avatar-lg">
-                                <?= strtoupper(substr($app['applicant_name'], 0, 2)) ?>
-                            </div>
+                            <?php $avatar = $app['avatar'] ?? null; ?>
+                            <?php if (!empty($avatar)): ?>
+                                <img class="applicant-avatar-lg"
+                                     src="<?= APP_URL . '/uploads/' . htmlspecialchars($avatar) ?>"
+                                     alt="<?= htmlspecialchars($app['applicant_name'] ?? 'Applicant') ?>">
+                            <?php else: ?>
+                                <div class="applicant-avatar-lg">
+                                    <?= strtoupper(substr($app['applicant_name'] ?? 'U', 0, 2)) ?>
+                                </div>
+                            <?php endif; ?>
 
                             <div class="applicant-profile-info">
                                 <h4><?= htmlspecialchars($app['applicant_name']) ?></h4>
@@ -172,9 +188,10 @@ $bodyClass  = 'app-body';
                             <h5 class="detail-section-title">
                                 <i class="bi bi-gavel"></i> Make Decision
                             </h5>
-                            <form method="POST"
-                                  action="<?= APP_URL ?>/reviewer/applications/<?= $app['id'] ?>">
+
+                            <form method="POST" action="<?= APP_URL ?>/reviewer/applications/<?= $app['id'] ?>" id="reviewDecisionForm">
                                 <input type="hidden" name="_token" value="<?= $csrf ?>">
+                                <input type="hidden" name="status" id="decisionStatus" value="">
 
                                 <div class="form-group">
                                     <label class="form-label">Review Notes</label>
@@ -184,20 +201,27 @@ $bodyClass  = 'app-body';
                                               placeholder="Add notes about your decision (visible to the applicant)…"></textarea>
                                 </div>
 
-                                <div class="decision-buttons">
-                                    <button type="submit"
-                                            name="status"
+                                <div class="decision-buttons" role="group" aria-label="Decision">
+                                    <button type="button"
+                                            id="btnReject"
                                             value="rejected"
                                             class="btn-reject"
-                                            onclick="return confirm('Reject this application?')">
+                                            onclick="if (confirm('Reject this application?')) setDecision('rejected');">
                                         <i class="bi bi-x-circle"></i> Reject
                                     </button>
-                                    <button type="submit"
-                                            name="status"
+
+                                    <button type="button"
+                                            id="btnApprove"
                                             value="approved"
                                             class="btn-approve"
-                                            onclick="return confirm('Approve this application?')">
+                                            onclick="if (confirm('Approve this application?')) setDecision('approved');">
                                         <i class="bi bi-check-circle"></i> Approve
+                                    </button>
+                                </div>
+
+                                <div class="form-actions" style="margin-top:1.25rem;">
+                                    <button type="submit" class="btn-save" onclick="return confirm('Save changes to apply your decision?');">
+                                        <i class="bi bi-check-lg"></i> Save changes
                                     </button>
                                 </div>
                             </form>
@@ -270,3 +294,55 @@ $bodyClass  = 'app-body';
 </div>
 
 <?php require ROOT . '/app/Views/layouts/footer.php'; ?>
+
+<script>
+  function setDecision(decision) {
+    const statusEl = document.getElementById('decisionStatus');
+    if (!statusEl) return;
+    statusEl.value = decision;
+
+    const btnReject = document.getElementById('btnReject');
+    const btnApprove = document.getElementById('btnApprove');
+
+    // Reset both buttons to enabled each time user changes mind.
+    if (btnReject) {
+      btnReject.disabled = false;
+      btnReject.style.pointerEvents = '';
+      btnReject.style.opacity = '';
+      btnReject.setAttribute('aria-disabled', 'false');
+    }
+    if (btnApprove) {
+      btnApprove.disabled = false;
+      btnApprove.style.pointerEvents = '';
+      btnApprove.style.opacity = '';
+      btnApprove.setAttribute('aria-disabled', 'false');
+    }
+
+    // Lock only the selected button (other stays clickable).
+    if (decision === 'rejected') {
+      if (btnReject) {
+        btnReject.disabled = true;
+        btnReject.setAttribute('aria-disabled', 'true');
+        btnReject.style.pointerEvents = 'none';
+        btnReject.style.opacity = '0.65';
+      }
+    } else if (decision === 'approved') {
+      if (btnApprove) {
+        btnApprove.disabled = true;
+        btnApprove.setAttribute('aria-disabled', 'true');
+        btnApprove.style.pointerEvents = 'none';
+        btnApprove.style.opacity = '0.65';
+      }
+    }
+  }
+
+  // On load, if a decision was previously set (rare), keep buttons consistent.
+  window.addEventListener('load', () => {
+    const statusEl = document.getElementById('decisionStatus');
+    if (!statusEl) return;
+    const initial = (statusEl.value || '').trim();
+    if (initial === 'rejected') setDecision('rejected');
+    if (initial === 'approved') setDecision('approved');
+  });
+</script>
+

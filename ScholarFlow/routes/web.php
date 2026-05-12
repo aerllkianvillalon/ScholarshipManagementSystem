@@ -21,11 +21,15 @@ $router->get('/apply/:scholarshipId',   'ApplicationController@form');
 $router->post('/apply/:scholarshipId',  'ApplicationController@submit');
 $router->get('/applications',           'ApplicationController@myApplications');
 $router->get('/applications/:id',       'ApplicationController@show');
+$router->post('/applications/:id/unsubmit', 'ApplicationController@unsubmit');
 
 // ── Reviewer ──────────────────────────────────────────────────
 $router->get('/reviewer',               'ReviewerController@dashboard');
 $router->get('/reviewer/applications',  'ReviewerController@applications');
 $router->get('/reviewer/applications/:id', 'ReviewerController@review');
+$router->get('/reviewer/applications/:id/view', 'ReviewerController@viewApplication');
+$router->get('/reviewer/applications/:id/edit','ReviewerController@editApplication');
+$router->post('/reviewer/applications/:id/edit','ReviewerController@updateApplicationEdit');
 $router->post('/reviewer/applications/:id', 'ReviewerController@decide');
 
 // ── Admin ─────────────────────────────────────────────────────
@@ -48,4 +52,14 @@ $router->post('/admin/scholarships/:id/edit',   'AdminController@updateScholarsh
 $router->post('/admin/scholarships/:id/delete', 'AdminController@deleteScholarship');
 
 // Admin - Applications
-$router->get('/admin/applications',    'AdminController@applications');
+$router->get('/admin/applications',                 'AdminController@applications');
+$router->get('/admin/applications/:id',            'AdminController@applicationShow');
+$router->get('/admin/applications/:id/edit',      'AdminController@applicationEditForm');
+$router->post('/admin/applications/:id/edit',     'AdminController@applicationUpdateEdit');
+$router->post('/admin/applications/:id/delete',    'AdminController@deleteApplication');
+
+
+
+
+
+

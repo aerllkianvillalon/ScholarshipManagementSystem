@@ -121,4 +121,39 @@ class ApplicationController extends Controller
         $documents = $this->document->forApplication((int)$id);
         $this->view('student.application_detail', compact('auth', 'app', 'documents'));
     }
+
+    /**
+     * Allow a student to unsubmit (delete) an application that is pending or rejected.
+     * This enables the student to reapply later.
+     */
+    public function unsubmit(string $id): void
+    {
+        $this->requireRole('student');
+        $this->verifyCsrfToken();
+        $auth = $this->auth();
+        $app  = $this->application->find((int)$id);
+
+        if (!$app) {
+            $this->setFlash('error', 'Application not found.');
+            $this->redirect('/applications');
+        }
+
+        // Ensure the student owns this application
+        if ($app['user_id'] != $auth['id']) {
+            $this->setFlash('error', 'You cannot modify this application.');
+            $this->redirect('/applications');
+        }
+
+        // Only allow unsubmit for pending or rejected applications
+        if (!in_array($app['status'], ['pending', 'rejected'])) {
+            $this->setFlash('error', 'Only pending or rejected applications can be unsubmitted.');
+            $this->redirect('/applications');
+        }
+
+        // Delete the application (documents cascade via DB foreign key)
+        $this->application->delete((int)$id);
+
+        $this->setFlash('success', 'Application has been unsubmitted. You may apply again.');
+        $this->redirect('/applications');
+    }
 }
