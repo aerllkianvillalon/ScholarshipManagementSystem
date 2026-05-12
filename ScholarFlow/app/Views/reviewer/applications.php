@@ -28,25 +28,17 @@ $bodyClass  = 'app-body';
             <?php require ROOT . '/app/Views/layouts/flash.php'; ?>
 
             <!-- Status Tabs -->
-            <div class="tab-filter-bar">
-                <?php
-                $tabs = [
-                    ''         => 'All',
-                    'pending'  => 'Pending',
-                    'approved' => 'Approved',
-                    'rejected' => 'Rejected',
-                ];
-                foreach ($tabs as $val => $label):
-                    $isActive = ($status === $val);
-                ?>
-                    <a href="<?= APP_URL ?>/reviewer/applications<?= $val ? '?status=' . $val : '' ?>"
-                       class="tab-filter <?= $isActive ? 'active' : '' ?>">
-                        <?php if ($val): ?>
-                            <span class="dot dot-<?= $val ?>"></span>
-                        <?php endif; ?>
-                        <?= $label ?>
-                    </a>
-                <?php endforeach; ?>
+            <div class="filter-bar">
+                <div class="filter-search">
+                    <i class="bi bi-search"></i>
+                    <input type="text" id="appSearch" placeholder="Search applicant or scholarship..." class="search-input">
+                </div>
+                <div class="filter-badges">
+                    <button class="filter-btn active" data-status="">All</button>
+                    <button class="filter-btn" data-status="pending">Pending</button>
+                    <button class="filter-btn" data-status="approved">Approved</button>
+                    <button class="filter-btn" data-status="rejected">Rejected</button>
+                </div>
             </div>
 
             <?php if (empty($applications)): ?>
@@ -70,7 +62,8 @@ $bodyClass  = 'app-body';
                         </thead>
                         <tbody>
                             <?php foreach ($applications as $row): ?>
-                                <tr>
+                                <tr data-status="<?= $row['status'] ?>"
+                                    data-search="<?= strtolower(($row['applicant_name'] ?? '') . ' ' . ($row['scholarship_name'] ?? '')) ?>">
                                     <td class="mono">
                                         <?= str_pad($row['id'], 5, '0', STR_PAD_LEFT) ?>
                                     </td>
@@ -129,5 +122,30 @@ $bodyClass  = 'app-body';
         </main>
     </div>
 </div>
+
+<script>
+const search = document.getElementById('appSearch');
+const filterBtns = document.querySelectorAll('.filter-btn');
+let activeFilter = '';
+
+function filterRows() {
+    const q = search.value.toLowerCase();
+    document.querySelectorAll('.sf-table tbody tr').forEach(row => {
+        const matchS = !activeFilter || row.dataset.status === activeFilter;
+        const matchQ = row.dataset.search.includes(q);
+        row.style.display = matchS && matchQ ? '' : 'none';
+    });
+}
+
+search?.addEventListener('input', filterRows);
+filterBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+        filterBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        activeFilter = btn.dataset.status;
+        filterRows();
+    });
+});
+</script>
 
 <?php require ROOT . '/app/Views/layouts/footer.php'; ?>
