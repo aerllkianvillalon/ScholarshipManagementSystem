@@ -80,11 +80,12 @@ $bodyClass = 'app-body';
                         <table class="sf-table">
                             <thead>
                                 <tr>
+                                    <th>#</th>
                                     <th>Name</th>
                                     <th>Email</th>
                                     <th>Role</th>
                                     <th>Created</th>
-                                    <th style="width: 240px;">Actions</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -92,7 +93,23 @@ $bodyClass = 'app-body';
                                     <?php $roleVal = strtolower((string)($u['role'] ?? '')); ?>
                                     <tr data-role="<?= htmlspecialchars($roleVal) ?>"
                                         data-search="<?= htmlspecialchars(strtolower(($u['name'] ?? '') . ' ' . ($u['email'] ?? ''))) ?>">
-                                        <td><?= htmlspecialchars($u['name'] ?? '') ?></td>
+                                        <td class="mono"><?= str_pad($u['id'], 5, '0', STR_PAD_LEFT) ?></td>
+                                        <td>
+                                            <div class="applicant-cell">
+                                                <?php if (!empty($u['avatar'])): ?>
+                                                    <img class="mini-avatar-img"
+                                                         src="<?= APP_URL . '/uploads/' . htmlspecialchars($u['avatar']) ?>"
+                                                         alt="<?= htmlspecialchars($u['name'] ?? '') ?>">
+                                                <?php else: ?>
+                                                    <div class="mini-avatar">
+                                                        <?= strtoupper(substr($u['name'] ?? 'U', 0, 2)) ?>
+                                                    </div>
+                                                <?php endif; ?>
+                                                <div>
+                                                    <strong><?= htmlspecialchars($u['name'] ?? '') ?></strong>
+                                                </div>
+                                            </div>
+                                        </td>
                                         <td><?= htmlspecialchars($u['email'] ?? '') ?></td>
                                         <td>
                                             <?php if ($roleVal === 'student'): ?>

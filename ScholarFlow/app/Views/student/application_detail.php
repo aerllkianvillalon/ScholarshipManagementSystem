@@ -24,13 +24,19 @@ $isEditing = isset($csrf);
             </div>
             <?php if (in_array($auth['role'] ?? '', ['admin', 'reviewer'])): ?>
                 <div class="topbar-actions">
-                    <?php if (($auth['role'] ?? '') === 'reviewer'): ?>
-                        <a href="<?= APP_URL ?>/reviewer/applications/<?= (int)$app['id'] ?>/edit" class="btn-add-sm">
+                    <?php if (!$isEditing): ?>
+                        <?php $editUrl = ($auth['role'] === 'reviewer')
+                            ? APP_URL . '/reviewer/applications/' . (int)$app['id'] . '/edit'
+                            : APP_URL . '/admin/applications/' . (int)$app['id'] . '/edit'; ?>
+                        <a href="<?= $editUrl ?>" class="btn-add-sm" id="editBtn">
                             <i class="bi bi-pencil-fill"></i> Edit Application
                         </a>
                     <?php else: ?>
-                        <a href="<?= APP_URL ?>/admin/applications/<?= (int)$app['id'] ?>/edit" class="btn-add-sm">
-                            <i class="bi bi-pencil-fill"></i> Edit Application
+                        <?php $viewUrl = ($auth['role'] === 'reviewer')
+                            ? APP_URL . '/reviewer/applications/' . (int)$app['id'] . '/view'
+                            : APP_URL . '/admin/applications/' . (int)$app['id']; ?>
+                        <a href="<?= $viewUrl ?>" class="btn-cancel-edit">
+                            <i class="bi bi-x-lg"></i> Cancel
                         </a>
                     <?php endif; ?>
                 </div>
@@ -69,6 +75,59 @@ $isEditing = isset($csrf);
                             <?php else: ?>
                                 <p>Unfortunately, your application was not approved this time.</p>
                             <?php endif; ?>
+                        </div>
+                    </div>
+
+                    <!-- Applicant Profile -->
+                    <div class="detail-card reviewer-applicant-card">
+                        <div class="applicant-profile">
+                            <?php if (!empty($app['avatar'])): ?>
+                                <img class="applicant-avatar-lg"
+                                     src="<?= APP_URL . '/uploads/' . htmlspecialchars($app['avatar']) ?>"
+                                     alt="<?= htmlspecialchars($app['applicant_name'] ?? 'Applicant') ?>">
+                            <?php else: ?>
+                                <div class="applicant-avatar-lg">
+                                    <?= strtoupper(substr($app['applicant_name'] ?? 'U', 0, 2)) ?>
+                                </div>
+                            <?php endif; ?>
+
+                            <div class="applicant-profile-info">
+                                <h4><?= htmlspecialchars($app['applicant_name']) ?></h4>
+                                <p><?= htmlspecialchars($app['applicant_email']) ?></p>
+                                <?php if (!empty($app['phone'])): ?>
+                                    <p><i class="bi bi-telephone"></i> <?= htmlspecialchars($app['phone']) ?></p>
+                                <?php endif; ?>
+                                <?php if (!empty($app['address'])): ?>
+                                    <p><i class="bi bi-geo-alt"></i> <?= htmlspecialchars($app['address']) ?></p>
+                                <?php endif; ?>
+                            </div>
+
+                            <div class="applicant-academic">
+                                <?php if (!empty($app['school'])): ?>
+                                    <div class="academic-item">
+                                        <span class="aca-label">School</span>
+                                        <span><?= htmlspecialchars($app['school']) ?></span>
+                                    </div>
+                                <?php endif; ?>
+                                <?php if (!empty($app['course'])): ?>
+                                    <div class="academic-item">
+                                        <span class="aca-label">Course</span>
+                                        <span><?= htmlspecialchars($app['course']) ?></span>
+                                    </div>
+                                <?php endif; ?>
+                                <?php if (!empty($app['gpa'])): ?>
+                                    <div class="academic-item">
+                                        <span class="aca-label">GPA</span>
+                                        <span class="gpa-highlight"><?= htmlspecialchars($app['gpa']) ?></span>
+                                    </div>
+                                <?php endif; ?>
+                                <?php if (!empty($app['year_level'])): ?>
+                                    <div class="academic-item">
+                                        <span class="aca-label">Year</span>
+                                        <span><?= htmlspecialchars($app['year_level']) ?></span>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
                         </div>
                     </div>
 
@@ -163,16 +222,31 @@ $isEditing = isset($csrf);
                         </div>
 
                         </div>
-                    <?php else: ?>
-                        <?php if (!empty($app['review_notes'])): ?>
-                            <div class="detail-card">
-                                <h5 class="detail-section-title"><i class="bi bi-chat-left-text"></i> Reviewer Notes</h5>
-                                <div class="review-notes-box">
-                                    <?= nl2br(htmlspecialchars($app['review_notes'])) ?>
+                        <?php else: ?>
+                            <?php if (!empty($app['review_notes'])): ?>
+                                <div class="detail-card">
+                                    <h5 class="detail-section-title"><i class="bi bi-chat-left-text"></i> Reviewer Notes</h5>
+                                    <div class="review-notes-box">
+                                        <?= nl2br(htmlspecialchars($app['review_notes'])) ?>
+                                    </div>
                                 </div>
-                            </div>
+                            <?php endif; ?>
+                            <?php if (($auth['role'] ?? '') === 'student' && in_array($app['status'], ['pending', 'rejected'])): ?>
+                                <div class="detail-card" style="display:flex; gap:1rem; flex-wrap:wrap;">
+                                    <a href="<?= APP_URL ?>/applications/<?= $app['id'] ?>/edit" class="btn-save">
+                                        <i class="bi bi-pencil-fill"></i> Edit & Resubmit
+                                    </a>
+                                    <form method="POST"
+                                        action="<?= APP_URL ?>/applications/<?= $app['id'] ?>/unsubmit"
+                                        data-confirm="Are you sure you want to delete this application? This cannot be undone.">
+                                        <input type="hidden" name="_token" value="<?= htmlspecialchars($csrf ?? $_SESSION['csrf_token'] ?? '') ?>">
+                                        <button type="submit" class="btn-reject">
+                                            <i class="bi bi-trash-fill"></i> Delete Application
+                                        </button>
+                                    </form>
+                                </div>
+                            <?php endif; ?>
                         <?php endif; ?>
-                    <?php endif; ?>
 
                 </div>
 
@@ -188,6 +262,12 @@ $isEditing = isset($csrf);
                             <span class="meta-label">Applied On</span>
                             <span class="meta-value"><?= date('M j, Y', strtotime($app['created_at'])) ?></span>
                         </div>
+                        <?php if (!empty($app['updated_at'])): ?>
+                            <div class="meta-item">
+                                <span class="meta-label">Resubmitted</span>
+                                <span class="meta-value"><?= date('M j, Y', strtotime($app['updated_at'])) ?></span>
+                            </div>
+                        <?php endif; ?>
                         <?php if ($auth['role'] !== 'student'): ?>
                             <div class="meta-item">
                                 <span class="meta-label">Applicant</span>

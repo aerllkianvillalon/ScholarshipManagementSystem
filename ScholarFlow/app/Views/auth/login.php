@@ -58,28 +58,8 @@
 
         <p class="auth-footer-text">
             Don't have an account?
-            <a href="<?= APP_URL ?>/register">Create one free</a>
+            <a href="<?= APP_URL ?>/register">Create one</a>
         </p>
-    </div>
-
-    <div class="auth-decoration">
-        <div class="deco-shape deco-1"></div>
-        <div class="deco-shape deco-2"></div>
-        <div class="deco-shape deco-3"></div>
-        <div class="deco-stats">
-            <div class="deco-stat">
-                <span class="stat-num">500+</span>
-                <span class="stat-label">Scholarships</span>
-            </div>
-            <div class="deco-stat">
-                <span class="stat-num">₱2M+</span>
-                <span class="stat-label">Awarded</span>
-            </div>
-            <div class="deco-stat">
-                <span class="stat-num">1,200+</span>
-                <span class="stat-label">Students</span>
-            </div>
-        </div>
     </div>
 </div>
 

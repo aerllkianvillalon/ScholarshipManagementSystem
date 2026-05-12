@@ -22,4 +22,12 @@ class Document extends Model
             'uploaded_at'    => date('Y-m-d H:i:s'),
         ]);
     }
+
+    public function deleteForApplicationByType(int $appId, string $docType): bool
+    {
+        return $this->execute(
+            'DELETE FROM documents WHERE application_id = ? AND doc_type = ?',
+            [$appId, $docType]
+        );
+    }
 }

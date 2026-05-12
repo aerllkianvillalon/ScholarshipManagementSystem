@@ -119,13 +119,10 @@ class ApplicationController extends Controller
         }
 
         $documents = $this->document->forApplication((int)$id);
-        $this->view('student.application_detail', compact('auth', 'app', 'documents'));
+        $csrf = $this->generateCsrfToken();
+        $this->view('student.application_detail', compact('auth', 'app', 'documents', 'csrf'));
     }
 
-    /**
-     * Allow a student to unsubmit (delete) an application that is pending or rejected.
-     * This enables the student to reapply later.
-     */
     public function unsubmit(string $id): void
     {
         $this->requireRole('student');
@@ -153,7 +150,85 @@ class ApplicationController extends Controller
         // Delete the application (documents cascade via DB foreign key)
         $this->application->delete((int)$id);
 
-        $this->setFlash('success', 'Application has been unsubmitted. You may apply again.');
+        $this->setFlash('success', 'Application deleted successfully.');
         $this->redirect('/applications');
+    }
+
+    public function resubmit(string $id): void
+    {
+        $this->requireRole('student');
+        $this->verifyCsrfToken();
+        $auth = $this->auth();
+        $app  = $this->application->find((int)$id);
+
+        if (!$app || $app['user_id'] != $auth['id']) {
+            $this->setFlash('error', 'Application not found.');
+            $this->redirect('/applications');
+        }
+
+        if (!in_array($app['status'], ['pending', 'rejected'])) {
+            $this->setFlash('error', 'Only pending or rejected applications can be edited.');
+            $this->redirect('/applications');
+        }
+
+        $errors = [];
+        $essay  = $this->input('essay');
+        if (strlen($essay) < 50) {
+            $errors[] = 'Personal statement must be at least 50 characters.';
+        }
+
+        if ($errors) {
+            $scholarship = $this->scholarship->find($app['scholarship_id']);
+            $documents   = $this->document->forApplication((int)$id);
+            $csrf        = $this->generateCsrfToken();
+            $flash       = ['error' => implode('<br>', $errors)];
+            $editMode    = true;
+            $this->view('student.apply', compact('auth', 'app', 'scholarship', 'documents', 'csrf', 'flash', 'essay', 'editMode'));
+            return;
+        }
+
+        $this->application->update((int)$id, [
+            'essay'       => $essay,
+            'status'      => 'pending',
+            'updated_at'  => date('Y-m-d H:i:s'),
+        ]);
+
+        $docTypes = ['transcript', 'id_document', 'recommendation', 'other'];
+        foreach ($docTypes as $docType) {
+            $file = $this->file($docType);
+            if (!$file) continue;
+            $path = $this->uploadFile($file, 'documents');
+            if ($path) {
+                $this->document->deleteForApplicationByType((int)$id, $docType);
+                $this->document->addDocument((int)$id, $docType, $path, $file['name']);
+            }
+        }
+
+        $this->setFlash('success', 'Application updated and resubmitted for review.');
+        $this->redirect('/applications/' . $id);
+    }
+
+    public function edit(string $id): void
+    {
+        $this->requireRole('student');
+        $auth = $this->auth();
+        $app  = $this->application->find((int)$id);
+
+        if (!$app || $app['user_id'] != $auth['id']) {
+            $this->setFlash('error', 'Application not found.');
+            $this->redirect('/applications');
+        }
+
+        if (!in_array($app['status'], ['pending', 'rejected'])) {
+            $this->setFlash('error', 'Only pending or rejected applications can be edited.');
+            $this->redirect('/applications');
+        }
+
+        $scholarship = $this->scholarship->find($app['scholarship_id']);
+        $documents   = $this->document->forApplication((int)$id);
+        $csrf        = $this->generateCsrfToken();
+        $flash       = $this->getFlash();
+        $editMode    = true;
+        $this->view('student.apply', compact('auth', 'app', 'scholarship', 'documents', 'csrf', 'flash', 'editMode'));
     }
 }

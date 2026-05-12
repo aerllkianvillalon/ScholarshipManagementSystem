@@ -112,14 +112,8 @@
 
         <p class="auth-footer-text">
             Already have an account?
-            <a href="<?= APP_URL ?>/login">Sign in instead</a>
+            <a href="<?= APP_URL ?>/login">Sign in</a>
         </p>
-    </div>
-
-    <div class="auth-decoration">
-        <div class="deco-shape deco-1"></div>
-        <div class="deco-shape deco-2"></div>
-        <div class="deco-shape deco-3"></div>
     </div>
 </div>
 

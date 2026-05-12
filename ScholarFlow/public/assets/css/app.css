@@ -261,51 +261,13 @@ textarea.form-control { resize: vertical; min-height: 120px; }
 .auth-footer-text a { color: var(--primary-light); font-weight: 600; }
 .auth-footer-text a:hover { text-decoration: underline; }
 
-/* Decoration panel */
-.auth-decoration {
-  flex: 1;
-  display: none;
-  position: relative;
-  overflow: hidden;
-}
-@media (min-width: 1024px) { .auth-decoration { display: flex; align-items: center; justify-content: center; } }
-
-.deco-shape {
-  position: absolute;
-  border-radius: 50%;
-  opacity: 0.15;
-}
-.deco-1 {
-  width: 400px; height: 400px;
-  background: var(--primary-light);
-  top: -100px; right: -100px;
-}
-.deco-2 {
-  width: 300px; height: 300px;
-  background: var(--accent);
-  bottom: 50px; left: -50px;
-}
-.deco-3 {
-  width: 200px; height: 200px;
+/* ═══════════════════════════════════════════════════════════
+   LANDING PAGE
+   ═══════════════════════════════════════════════════════════ */
+.landing-body {
   background: #fff;
-  top: 40%; left: 30%;
+  overflow-x: hidden;
 }
-
-.deco-stats {
-  position: relative; z-index: 1;
-  display: flex; flex-direction: column; gap: 1.5rem;
-}
-.deco-stat {
-  display: flex; flex-direction: column;
-  background: rgba(255,255,255,.08);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255,255,255,.12);
-  border-radius: var(--radius-lg);
-  padding: 1.5rem 2rem;
-  text-align: center;
-}
-.stat-num { font-family: var(--font-display); font-size: 2.5rem; font-weight: 800; color: #fff; }
-.deco-stat .stat-label { color: rgba(255,255,255,.6); font-size: 0.875rem; }
 
 /* Req star */
 .req-star { color: var(--danger); margin-left: 2px; }
@@ -780,6 +742,8 @@ textarea.form-control { resize: vertical; min-height: 120px; }
   border-radius: var(--radius-full);
   font-size: 0.8125rem; font-weight: 600;
 }
+
+
 
 /* Mini scholarship cards (dashboard) */
 .scholarship-mini-list { display: flex; flex-direction: column; gap: 0.75rem; }
@@ -1467,6 +1431,16 @@ img.applicant-avatar-lg {
   transition: all var(--transition);
 }
 .btn-add-sm:hover { background: var(--primary-light); color: #fff; }
+
+.btn-cancel-edit {
+  display: inline-flex; align-items: center; gap: 0.35rem;
+  padding: 0.5rem 1rem;
+  background: var(--danger-soft); color: var(--danger);
+  border-radius: var(--radius-md);
+  font-size: 0.8125rem; font-weight: 600;
+  transition: all var(--transition);
+}
+.btn-cancel-edit:hover { background: var(--danger); color: #fff; }
 
 /* Users page filter enhancements */
 .users-filter-form { display:flex; align-items:center; gap:0.75rem; width:100%; }

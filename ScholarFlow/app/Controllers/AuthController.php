@@ -14,12 +14,12 @@ class AuthController extends Controller
     }
 
     public function index(): void
-    {
-        if ($this->auth()) {
-            $this->redirectToDashboard();
+        {
+            if ($this->auth()) {
+                $this->redirectToDashboard();
+            }
+            $this->view('home', []);
         }
-        $this->redirect('/login');
-    }
 
     public function loginForm(): void
     {

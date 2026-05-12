@@ -9,7 +9,7 @@
             <button class="sidebar-toggle-btn" id="sidebarOpen"><i class="bi bi-list"></i></button>
             <div class="topbar-title">
                 <h2>Apply for Scholarship</h2>
-                <span><?= htmlspecialchars($scholarship['name']) ?></span>
+                <span><?= isset($editMode) ? 'Edit Application — ' : '' ?><?= htmlspecialchars($scholarship['name']) ?></span>
             </div>
         </header>
 
@@ -59,7 +59,7 @@
 
                 <!-- Application Form -->
                 <div class="apply-form-wrap">
-                    <form method="POST" action="<?= APP_URL ?>/apply/<?= $scholarship['id'] ?>"
+                    <form method="POST" action="<?= isset($editMode) ? APP_URL . '/applications/' . $app['id'] . '/resubmit' : APP_URL . '/apply/' . $scholarship['id'] ?>"
                           enctype="multipart/form-data" class="apply-form" id="applyForm" novalidate>
                         <input type="hidden" name="_token" value="<?= $csrf ?>">
 
@@ -74,7 +74,7 @@
                             </div>
                             <textarea name="essay" class="form-control textarea-lg"
                                       placeholder="Write your personal statement here (minimum 50 characters)..."
-                                      rows="8" required><?= htmlspecialchars($essay ?? '') ?></textarea>
+                                      rows="8" required><?= htmlspecialchars($essay ?? ($editMode ? $app['essay'] : '')) ?></textarea>
                             <div class="char-counter"><span id="charCount">0</span> characters</div>
                         </div>
 
@@ -87,86 +87,56 @@
                                     <p>Upload clear, legible copies. Accepted: PDF, JPG, PNG (max 5MB each)</p>
                                 </div>
                             </div>
-
+                            
+                            <?php
+                            $existingDocs = [];
+                            if (!empty($documents)) {
+                                foreach ($documents as $doc) $existingDocs[$doc['doc_type']] = $doc;
+                            }
+                            $docFields = [
+                                'transcript'     => ['label' => 'Transcript of Records', 'icon' => 'file-earmark-text', 'required' => true],
+                                'id_document'    => ['label' => 'Valid ID',               'icon' => 'person-badge',      'required' => true],
+                                'recommendation' => ['label' => 'Recommendation Letter',  'icon' => 'envelope-paper',    'required' => false],
+                                'other'          => ['label' => 'Other Document',          'icon' => 'paperclip',         'required' => false],
+                            ];
+                            ?>
                             <div class="upload-grid">
-                                <div class="upload-field required">
-                                    <label>
-                                        <i class="bi bi-file-earmark-text"></i>
-                                        Transcript of Records <span class="req-star">*</span>
-                                    </label>
-                                    <div class="file-drop-zone" id="drop-transcript">
-                                        <input type="file" name="transcript" accept=".pdf,.jpg,.jpeg,.png"
-                                               class="file-input" id="file-transcript">
-                                        <div class="drop-content">
-                                            <i class="bi bi-cloud-upload"></i>
-                                            <span>Drop file here or <strong>browse</strong></span>
-                                            <small>PDF, JPG, PNG — max 5MB</small>
+                                <?php foreach ($docFields as $key => $meta): ?>
+                                    <div class="upload-field <?= $meta['required'] ? 'required' : '' ?>">
+                                        <label>
+                                            <i class="bi bi-<?= $meta['icon'] ?>"></i>
+                                            <?= $meta['label'] ?>
+                                            <?= $meta['required'] ? '<span class="req-star">*</span>' : '<small>(optional)</small>' ?>
+                                        </label>
+                                        <?php if (isset($existingDocs[$key])): ?>
+                                            <div class="existing-doc-notice">
+                                                <i class="bi bi-file-check-fill"></i>
+                                                <span>Current: <strong><?= htmlspecialchars($existingDocs[$key]['original_name'] ?? basename($existingDocs[$key]['path'])) ?></strong></span>
+                                            </div>
+                                        <?php endif; ?>
+                                        <div class="file-drop-zone" id="drop-<?= $key ?>">
+                                            <input type="file" name="<?= $key ?>" accept=".pdf,.jpg,.jpeg,.png"
+                                                class="file-input" id="file-<?= $key ?>">
+                                            <div class="drop-content">
+                                                <i class="bi bi-cloud-upload"></i>
+                                                <span><?= isset($existingDocs[$key]) ? 'Upload to <strong>replace</strong>' : 'Drop file here or <strong>browse</strong>' ?></span>
+                                                <small>PDF, JPG, PNG — max 5MB</small>
+                                            </div>
+                                            <div class="file-preview" id="preview-<?= $key ?>"></div>
                                         </div>
-                                        <div class="file-preview" id="preview-transcript"></div>
                                     </div>
-                                </div>
-
-                                <div class="upload-field required">
-                                    <label>
-                                        <i class="bi bi-person-badge"></i>
-                                        Valid ID <span class="req-star">*</span>
-                                    </label>
-                                    <div class="file-drop-zone" id="drop-id_document">
-                                        <input type="file" name="id_document" accept=".pdf,.jpg,.jpeg,.png"
-                                               class="file-input" id="file-id_document">
-                                        <div class="drop-content">
-                                            <i class="bi bi-cloud-upload"></i>
-                                            <span>Drop file here or <strong>browse</strong></span>
-                                            <small>PDF, JPG, PNG — max 5MB</small>
-                                        </div>
-                                        <div class="file-preview" id="preview-id_document"></div>
-                                    </div>
-                                </div>
-
-                                <div class="upload-field">
-                                    <label>
-                                        <i class="bi bi-envelope-paper"></i>
-                                        Recommendation Letter <small>(optional)</small>
-                                    </label>
-                                    <div class="file-drop-zone" id="drop-recommendation">
-                                        <input type="file" name="recommendation" accept=".pdf,.jpg,.jpeg,.png"
-                                               class="file-input" id="file-recommendation">
-                                        <div class="drop-content">
-                                            <i class="bi bi-cloud-upload"></i>
-                                            <span>Drop file here or <strong>browse</strong></span>
-                                            <small>PDF, JPG, PNG — max 5MB</small>
-                                        </div>
-                                        <div class="file-preview" id="preview-recommendation"></div>
-                                    </div>
-                                </div>
-
-                                <div class="upload-field">
-                                    <label>
-                                        <i class="bi bi-paperclip"></i>
-                                        Other Document <small>(optional)</small>
-                                    </label>
-                                    <div class="file-drop-zone" id="drop-other">
-                                        <input type="file" name="other" accept=".pdf,.jpg,.jpeg,.png"
-                                               class="file-input" id="file-other">
-                                        <div class="drop-content">
-                                            <i class="bi bi-cloud-upload"></i>
-                                            <span>Drop file here or <strong>browse</strong></span>
-                                            <small>PDF, JPG, PNG — max 5MB</small>
-                                        </div>
-                                        <div class="file-preview" id="preview-other"></div>
-                                    </div>
-                                </div>
+                                <?php endforeach; ?>
                             </div>
                         </div>
 
                         <!-- Submit -->
                         <div class="apply-submit">
-                            <a href="<?= APP_URL ?>/scholarships" class="btn-cancel">
+                            <a href="<?= isset($editMode) ? APP_URL . '/applications/' . $app['id'] : APP_URL . '/scholarships' ?>" class="btn-cancel">
                                 <i class="bi bi-arrow-left"></i> Cancel
                             </a>
                             <button type="submit" class="btn-submit-app" id="submitBtn">
                                 <i class="bi bi-send-fill"></i>
-                                Submit Application
+                                <?= isset($editMode) ? 'Resubmit Application' : 'Submit Application' ?>
                             </button>
                         </div>
                     </form>

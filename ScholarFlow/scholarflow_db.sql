@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 12, 2026 at 02:17 AM
+-- Generation Time: May 12, 2026 at 02:19 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -36,16 +36,19 @@ CREATE TABLE `applications` (
   `reviewed_by` int(10) UNSIGNED DEFAULT NULL,
   `review_notes` text DEFAULT NULL,
   `reviewed_at` datetime DEFAULT NULL,
-  `created_at` datetime NOT NULL DEFAULT current_timestamp()
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `updated_at` datetime DEFAULT NULL ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `applications`
 --
 
-INSERT INTO `applications` (`id`, `user_id`, `scholarship_id`, `essay`, `status`, `reviewed_by`, `review_notes`, `reviewed_at`, `created_at`) VALUES
-(7, 4, 5, 'I want you to make a condition in my system when a student applies for an exclusive scholarship, he can no longer apply for other scholarship programs, but if it is in multiple allowed, the student can. make also the user able to Unsubmit and resubmit his application when his application is pending or rejected.', 'rejected', 1, 'Please submit a clear photo of TOR.', '2026-05-11 15:43:32', '2026-05-11 10:29:56'),
-(9, 7, 7, 'aersadazsdfcv fsdzgrhnvfgjyugbvfykjbhuinhulnhjilmo', 'approved', 1, 'No.', '2026-05-12 01:03:12', '2026-05-11 17:44:56');
+INSERT INTO `applications` (`id`, `user_id`, `scholarship_id`, `essay`, `status`, `reviewed_by`, `review_notes`, `reviewed_at`, `created_at`, `updated_at`) VALUES
+(9, 7, 7, 'aersadazsdfcv fsdzgrhnvfgjyugbvfykjbhuinhulnhjilmo', 'rejected', 1, 'No.', '2026-05-12 09:57:42', '2026-05-11 17:44:56', NULL),
+(10, 3, 7, 'sfdgsxdfsdfsdefsddefdsefsdefdesrfxsefxsderfxserfse', 'pending', NULL, NULL, NULL, '2026-05-12 03:33:24', NULL),
+(11, 4, 2, 'awdaswdazsdzaswdasdasdzasdzasdzasdzasdzasdaswdedwe', 'pending', NULL, NULL, NULL, '2026-05-12 03:39:37', NULL),
+(12, 4, 4, 'sadfasdaszwdazsdaswdazsdzasdfazsfazfrwwraqraqerfqawr', 'pending', NULL, NULL, NULL, '2026-05-12 03:40:04', NULL);
 
 -- --------------------------------------------------------
 
@@ -67,10 +70,14 @@ CREATE TABLE `documents` (
 --
 
 INSERT INTO `documents` (`id`, `application_id`, `doc_type`, `file_path`, `original_name`, `uploaded_at`) VALUES
-(13, 7, 'transcript', 'documents/doc_6a019384920d10.91489269.png', 'Axolotl_Bucket.png', '2026-05-11 10:29:56'),
-(14, 7, 'id_document', 'documents/doc_6a019384a54183.46240390.png', 'Axolotl_Bucket.png', '2026-05-11 10:29:56'),
 (17, 9, 'transcript', 'documents/doc_6a01f978533d16.22113522.png', 'Axolotl_Bucket.png', '2026-05-11 17:44:56'),
-(18, 9, 'id_document', 'documents/doc_6a01f978609f95.20193079.png', 'Axolotl_Bucket.png', '2026-05-11 17:44:56');
+(18, 9, 'id_document', 'documents/doc_6a01f978609f95.20193079.png', 'Axolotl_Bucket.png', '2026-05-11 17:44:56'),
+(19, 10, 'transcript', 'documents/doc_6a028364953812.78018058.png', 'Axolotl_Bucket.png', '2026-05-12 03:33:24'),
+(20, 10, 'id_document', 'documents/doc_6a028364e86cb4.22194261.png', 'Axolotl_Bucket.png', '2026-05-12 03:33:24'),
+(21, 11, 'transcript', 'documents/doc_6a0284da075d67.88906997.png', 'imresizer-Axolotl_Bucket.png', '2026-05-12 03:39:38'),
+(22, 11, 'id_document', 'documents/doc_6a0284da1f1e41.34860043.png', 'imresizer-Axolotl_Bucket.png', '2026-05-12 03:39:38'),
+(23, 12, 'transcript', 'documents/doc_6a0284f4dc3569.73561627.png', 'Axolotl_Bucket.png', '2026-05-12 03:40:04'),
+(24, 12, 'id_document', 'documents/doc_6a0284f51616c9.47243427.png', 'Axolotl_Bucket.png', '2026-05-12 03:40:05');
 
 -- --------------------------------------------------------
 
@@ -135,7 +142,7 @@ CREATE TABLE `users` (
 INSERT INTO `users` (`id`, `name`, `email`, `password`, `role`, `phone`, `address`, `school`, `course`, `gpa`, `year_level`, `avatar`, `created_at`, `updated_at`) VALUES
 (1, 'System Admin', 'admin@scholarflow.com', '$2y$10$Am06hGblcASejPXFSNvQQedfnFqC1DREBeA8sFW8.NjWA.2eGLxJG', 'admin', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-05-09 23:16:06', '2026-05-11 15:33:17'),
 (2, 'Jane Reviewer', 'reviewer@scholarflow.com', '$2y$10$cX/4jeWRrZEyJdBYA6kbmO8nEnyG8/.Vz9EmbfMtT3ICCjRr39MMe', 'reviewer', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-05-09 23:16:06', '2026-05-11 15:33:17'),
-(3, 'Juan dela Cruz', 'student@scholarflow.com', '$2y$10$TKh8H1.PfbuSeX7jJUIrVukhZkdUStNd/XuS1HVB8SCIbF9fGbJVO', 'student', '+63 912 345 6789', NULL, 'Cebu Institute of Technology — University', 'BS Computer Science', '1.50', '3rd Year', NULL, '2026-05-09 23:16:06', '2026-05-11 23:38:21'),
+(3, 'Juan dela Cruz', 'student@scholarflow.com', '$2y$10$5En/q75zZHef5KM3jyIhhO.e5tbbbSk1tSVhaszmdNl8cJZj0Shba', 'student', '+63 912 345 6789', NULL, 'Cebu Institute of Technology — University', 'BS Computer Science', '1.50', '3rd Year', NULL, '2026-05-09 23:16:06', '2026-05-12 09:20:27'),
 (4, 'Aerll Kian Villalon', 'aerllkianvillalon@gmail.com', '$2y$10$V3YwBkqw5b3FF/JZo.WNb.ftuFqlgvMb9AgkVhyC0GX4y37Y6YDBa', 'student', '09109466040', 'Taboc, Danao City, Cebu', 'Cebu Technological University - Danao Campus', 'BSIT', '1', '2nd Year', 'avatars/doc_6a026adaee0131.42212625.jpg', '2026-05-10 11:23:15', '2026-05-12 01:48:42'),
 (7, 'Aerll Kian Villalon', 'villalonaerllkian@gmail.com', '$2y$10$qhkmUZGGPjfF0SfU4rCrvOiVZ5nIHAEEAGja/1k2ELqHgbOuwf4cC', 'student', '', '', '', '', NULL, NULL, 'avatars/doc_6a01f92a832426.36300080.png', '2026-05-11 17:42:46', '2026-05-11 17:43:38');
 
@@ -186,13 +193,13 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `applications`
 --
 ALTER TABLE `applications`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `documents`
 --
 ALTER TABLE `documents`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
 
 --
 -- AUTO_INCREMENT for table `scholarships`

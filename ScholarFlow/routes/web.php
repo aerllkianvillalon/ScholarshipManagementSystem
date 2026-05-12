@@ -22,6 +22,8 @@ $router->post('/apply/:scholarshipId',  'ApplicationController@submit');
 $router->get('/applications',           'ApplicationController@myApplications');
 $router->get('/applications/:id',       'ApplicationController@show');
 $router->post('/applications/:id/unsubmit', 'ApplicationController@unsubmit');
+$router->get('/applications/:id/edit',       'ApplicationController@edit');
+$router->post('/applications/:id/resubmit',  'ApplicationController@resubmit');
 
 // ── Reviewer ──────────────────────────────────────────────────
 $router->get('/reviewer',               'ReviewerController@dashboard');

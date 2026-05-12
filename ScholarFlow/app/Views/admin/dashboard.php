@@ -94,6 +94,7 @@ $bodyClass  = 'app-body';
                             <table class="sf-table sf-table-sm">
                                 <thead>
                                     <tr>
+                                        <th>#</th>
                                         <th>Applicant</th>
                                         <th>Scholarship</th>
                                         <th>Status</th>
@@ -103,8 +104,22 @@ $bodyClass  = 'app-body';
                                 <tbody>
                                     <?php foreach ($recentApplications as $row): ?>
                                         <tr>
+                                            <td class="mono"><?= str_pad($row['id'], 5, '0', STR_PAD_LEFT) ?></td>
                                             <td>
-                                                <?= htmlspecialchars($row['applicant_name']) ?>
+                                                <div class="applicant-cell">
+                                                    <?php if (!empty($row['avatar'])): ?>
+                                                        <img class="mini-avatar-img"
+                                                             src="<?= APP_URL . '/uploads/' . htmlspecialchars($row['avatar']) ?>"
+                                                             alt="<?= htmlspecialchars($row['applicant_name'] ?? '') ?>">
+                                                    <?php else: ?>
+                                                        <div class="mini-avatar">
+                                                            <?= strtoupper(substr($row['applicant_name'] ?? 'U', 0, 2)) ?>
+                                                        </div>
+                                                    <?php endif; ?>
+                                                    <div>
+                                                        <strong><?= htmlspecialchars($row['applicant_name']) ?></strong>
+                                                    </div>
+                                                </div>
                                             </td>
                                             <td>
                                                 <?= htmlspecialchars(substr($row['scholarship_name'], 0, 25)) ?>…
