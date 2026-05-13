@@ -95,6 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
     form.addEventListener('submit', (e) => {
       let valid = true;
       form.querySelectorAll('[required]').forEach(input => {
+        if (input.type === 'checkbox') return; // skip — handled per form
         if (!input.value.trim()) {
           input.style.borderColor = 'var(--danger)';
           valid = false;
@@ -110,6 +111,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+
+  
   // ── Input error state reset ──────────────────────────────
   document.querySelectorAll('.form-control').forEach(input => {
     input.addEventListener('input', () => {

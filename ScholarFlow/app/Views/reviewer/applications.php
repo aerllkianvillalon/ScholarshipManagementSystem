@@ -1,7 +1,6 @@
 <?php
 /**
  * Reviewer — All Applications List
- *
  * @var array   $auth          Current user
  * @var array[] $applications  Applications with joined scholarship + user data
  * @var string  $status        Active status filter ('' | 'pending' | 'approved' | 'rejected')

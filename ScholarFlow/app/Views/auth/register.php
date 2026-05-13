@@ -67,41 +67,16 @@
                 </div>
             </div>
 
-            <script>
-                function toggleRegisterPassword() {
-                    const inp = document.getElementById('passwordInputRegister');
-                    const ico = document.getElementById('eyeIconRegister');
-                    if (!inp || !ico) return;
-
-                    if (inp.type === 'password') {
-                        inp.type = 'text';
-                        ico.className = 'bi bi-eye-slash';
-                    } else {
-                        inp.type = 'password';
-                        ico.className = 'bi bi-eye';
-                    }
-                }
-
-                function toggleRegisterConfirmPassword() {
-                    const inp = document.getElementById('confirmPasswordInputRegister');
-                    const ico = document.getElementById('confirmEyeIconRegister');
-                    if (!inp || !ico) return;
-
-                    if (inp.type === 'password') {
-                        inp.type = 'text';
-                        ico.className = 'bi bi-eye-slash';
-                    } else {
-                        inp.type = 'password';
-                        ico.className = 'bi bi-eye';
-                    }
-                }
-            </script>
-
             <div class="form-check-terms">
-                <input class="form-check-input" type="checkbox" id="termsCheck" required>
-                <label class="form-check-label" for="termsCheck">
-                    I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>
-                </label>
+                <div class="form-check-row">
+                    <input class="form-check-input" type="checkbox" id="termsCheck" name="terms" required>
+                    <label class="form-check-label" for="termsCheck">
+                        I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>
+                    </label>
+                </div>
+                <p id="termsError" class="terms-error">
+                    You must agree to the Terms of Service and Privacy Policy.
+                </p>
             </div>
 
             <button type="submit" class="btn-auth">
@@ -116,5 +91,61 @@
         </p>
     </div>
 </div>
+
+<script>
+    function toggleRegisterPassword() {
+        const inp = document.getElementById('passwordInputRegister');
+        const ico = document.getElementById('eyeIconRegister');
+        if (!inp || !ico) return;
+
+        if (inp.type === 'password') {
+            inp.type = 'text';
+            ico.className = 'bi bi-eye-slash';
+        } else {
+            inp.type = 'password';
+            ico.className = 'bi bi-eye';
+        }
+    }
+
+    function toggleRegisterConfirmPassword() {
+        const inp = document.getElementById('confirmPasswordInputRegister');
+        const ico = document.getElementById('confirmEyeIconRegister');
+        if (!inp || !ico) return;
+
+        if (inp.type === 'password') {
+            inp.type = 'text';
+            ico.className = 'bi bi-eye-slash';
+        } else {
+            inp.type = 'password';
+            ico.className = 'bi bi-eye';
+        }
+    }
+
+    // ── Terms checkbox validation ────────────────────────────
+    document.querySelector('.auth-form').addEventListener('submit', function (e) {
+        const terms = document.getElementById('termsCheck');
+        const error = document.getElementById('termsError');
+
+        if (!terms.checked) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            error.classList.add('visible');
+            terms.style.outline = '2px solid var(--danger)';
+            terms.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else {
+            error.classList.remove('visible');
+            terms.style.outline = '';
+        }
+    });
+
+    // ── Clear error when user checks the box ────────────────
+    document.getElementById('termsCheck').addEventListener('change', function () {
+        if (this.checked) {
+            document.getElementById('termsError').classList.remove('visible');
+            this.style.outline = '';
+        }
+    });
+
+</script>
 
 <?php require ROOT . '/app/Views/layouts/footer.php'; ?>

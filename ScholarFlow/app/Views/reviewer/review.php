@@ -186,7 +186,7 @@ $bodyClass  = 'app-body';
                     <?php if ($app['status'] === 'pending'): ?>
                         <div class="detail-card decision-card">
                             <h5 class="detail-section-title">
-                                <i class="bi bi-gavel"></i> Make Decision
+                                <i class="bi bi-clipboard2-check"></i> Make Decision
                             </h5>
 
                             <form method="POST" action="<?= APP_URL ?>/reviewer/applications/<?= $app['id'] ?>" id="reviewDecisionForm">
@@ -194,34 +194,40 @@ $bodyClass  = 'app-body';
                                 <input type="hidden" name="status" id="decisionStatus" value="">
 
                                 <div class="form-group">
-                                    <label class="form-label">Review Notes</label>
-                                    <textarea name="review_notes"
-                                              class="form-control"
-                                              rows="4"
-                                              placeholder="Add notes about your decision (visible to the applicant)…"></textarea>
+                                    <label class="form-label">Status</label>
+                                    <div class="decision-buttons" role="group" aria-label="Decision">
+                                        <button type="button"
+                                                id="btnReject"
+                                                value="rejected"
+                                                class="btn-reject"
+                                                onclick="if (confirm('Reject this application?')) setDecision('rejected');">
+                                            <i class="bi bi-x-circle"></i> Reject
+                                        </button>
+
+                                        <button type="button"
+                                                id="btnApprove"
+                                                value="approved"
+                                                class="btn-approve"
+                                                onclick="if (confirm('Approve this application?')) setDecision('approved');">
+                                            <i class="bi bi-check-circle"></i> Approve
+                                        </button>
+                                    </div>
                                 </div>
 
-                                <div class="decision-buttons" role="group" aria-label="Decision">
-                                    <button type="button"
-                                            id="btnReject"
-                                            value="rejected"
-                                            class="btn-reject"
-                                            onclick="if (confirm('Reject this application?')) setDecision('rejected');">
-                                        <i class="bi bi-x-circle"></i> Reject
-                                    </button>
-
-                                    <button type="button"
-                                            id="btnApprove"
-                                            value="approved"
-                                            class="btn-approve"
-                                            onclick="if (confirm('Approve this application?')) setDecision('approved');">
-                                        <i class="bi bi-check-circle"></i> Approve
-                                    </button>
+                                <div class="form-group mt-3">
+                                    <label class="form-label">Review Notes</label>
+                                    <textarea name="review_notes"
+                                            class="form-control"
+                                            rows="4"
+                                            placeholder="Add notes about your decision (visible to the applicant)…"></textarea>
                                 </div>
 
                                 <div class="form-actions" style="margin-top:1.25rem;">
-                                    <button type="submit" class="btn-save" onclick="return confirm('Save changes to apply your decision?');">
-                                        <i class="bi bi-check-lg"></i> Save changes
+                                    <a href="<?= APP_URL ?>/reviewer/applications" class="btn-cancel">
+                                        <i class="bi bi-x-lg"></i> Cancel
+                                    </a>
+                                    <button type="submit" class="btn-save" onclick="return ensureDecisionSelected();">
+                                        <i class="bi bi-send-fill"></i> Submit Review
                                     </button>
                                 </div>
                             </form>
@@ -301,9 +307,8 @@ $bodyClass  = 'app-body';
     if (!statusEl) return;
     statusEl.value = decision;
 
-    const btnReject = document.getElementById('btnReject');
+    const btnReject  = document.getElementById('btnReject');
     const btnApprove = document.getElementById('btnApprove');
-
     // Reset both buttons to enabled each time user changes mind.
     if (btnReject) {
       btnReject.disabled = false;
@@ -319,21 +324,26 @@ $bodyClass  = 'app-body';
     }
 
     // Lock only the selected button (other stays clickable).
-    if (decision === 'rejected') {
-      if (btnReject) {
-        btnReject.disabled = true;
-        btnReject.setAttribute('aria-disabled', 'true');
-        btnReject.style.pointerEvents = 'none';
-        btnReject.style.opacity = '0.65';
-      }
-    } else if (decision === 'approved') {
-      if (btnApprove) {
-        btnApprove.disabled = true;
-        btnApprove.setAttribute('aria-disabled', 'true');
-        btnApprove.style.pointerEvents = 'none';
-        btnApprove.style.opacity = '0.65';
-      }
+    if (decision === 'rejected' && btnReject) {
+      btnReject.disabled = true;
+      btnReject.setAttribute('aria-disabled', 'true');
+      btnReject.style.pointerEvents = 'none';
+      btnReject.style.opacity = '0.65';
+    } else if (decision === 'approved' && btnApprove) {
+      btnApprove.disabled = true;
+      btnApprove.setAttribute('aria-disabled', 'true');
+      btnApprove.style.pointerEvents = 'none';
+      btnApprove.style.opacity = '0.65';
     }
+  }
+
+  function ensureDecisionSelected() {
+    const statusEl = document.getElementById('decisionStatus');
+    if (!statusEl || !statusEl.value) {
+      alert('Please select Approve or Reject before submitting your review.');
+      return false;
+    }
+    return confirm('Submit your review for this application?');
   }
 
   // On load, if a decision was previously set (rare), keep buttons consistent.

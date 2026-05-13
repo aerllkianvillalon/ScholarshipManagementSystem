@@ -66,11 +66,15 @@ $formUser   = $editUser ?? ['name' => $name ?? '', 'email' => $email ?? '', 'rol
                                 <label class="form-label">
                                     Password <?= $isEdit ? '<small>(leave blank to keep current)</small>' : '<span class="req-star">*</span>' ?>
                                 </label>
-                                <div class="input-with-icon">
+                                <div class="input-with-icon input-password">
                                     <i class="bi bi-lock"></i>
                                     <input type="password" name="password" class="form-control"
-                                           placeholder="Min. 8 characters"
-                                           <?= !$isEdit ? 'required minlength="8"' : '' ?>>
+                                        placeholder="Min. 8 characters"
+                                        id="passwordInputUser"
+                                        <?= !$isEdit ? 'required minlength="8"' : '' ?>>
+                                    <button type="button" class="toggle-password" onclick="toggleUserPassword()">
+                                        <i class="bi bi-eye" id="eyeIconUser"></i>
+                                    </button>
                                 </div>
                             </div>
                             <div class="form-group">
@@ -98,5 +102,16 @@ $formUser   = $editUser ?? ['name' => $name ?? '', 'email' => $email ?? '', 'rol
         </main>
     </div>
 </div>
+
+<script>
+    function toggleUserPassword() {
+        const inp = document.getElementById('passwordInputUser');
+        const ico = document.getElementById('eyeIconUser');
+        if (!inp || !ico) return;
+        const show = inp.type === 'password';
+        inp.type = show ? 'text' : 'password';
+        ico.className = show ? 'bi bi-eye-slash' : 'bi bi-eye';
+    }
+</script>
 
 <?php require ROOT . '/app/Views/layouts/footer.php'; ?>

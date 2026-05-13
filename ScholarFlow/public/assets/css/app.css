@@ -224,8 +224,15 @@ textarea.form-control { resize: vertical; min-height: 120px; }
 
 /* Terms checkbox */
 .form-check-terms {
-  display: flex; align-items: flex-start; gap: 0.625rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
   margin-bottom: 1.5rem;
+}
+.form-check-terms .form-check-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
 }
 .form-check-terms .form-check-input {
   width: 1rem; height: 1rem; margin-top: 2px; flex-shrink: 0;
@@ -235,6 +242,17 @@ textarea.form-control { resize: vertical; min-height: 120px; }
   font-size: 0.8125rem; color: var(--gray-500);
 }
 .form-check-terms a { color: var(--primary-light); }
+.terms-error {
+  display: none;
+  font-size: 0.8125rem;
+  color: var(--danger);
+  margin: 0;
+  padding: 0;
+  line-height: 1.4;
+}
+.terms-error.visible {
+  display: block;
+}
 
 /* Auth submit button */
 .btn-auth {
@@ -1609,8 +1627,6 @@ img.applicant-avatar-lg {
 .schol-detail-amount { display: flex; flex-direction: column; gap: 0.2rem; }
 .schol-detail-amount .amount-label { font-size: 0.75rem; opacity: 0.6; text-transform: uppercase; letter-spacing: 0.05em; }
 .amount-big { font-family: var(--font-display); font-size: 2rem; font-weight: 800; }
-
-
 
 .apply-action-card {
   background: #fff; border-radius: var(--radius-lg);
